@@ -28,7 +28,8 @@ class Day4Test : ShouldSpec({
 
             val result = unit.solve(input)
 
-            result shouldBe 13
+            result.first shouldBe 13
+            result.second shouldBe 43
         }
         should("return final value") {
             val input = """
@@ -175,9 +176,11 @@ class Day4Test : ShouldSpec({
             """.trimIndent().trimStart('\n')
 
             val result = Day4().solve(input)
-            println(result)
+            println("Total part 1: ${result.first}")
+            println("Total part 2: ${result.second}")
 
-            result shouldBe 1551
+            result.first shouldBe 1551
+            result.second shouldBe 9784
         }
     }
 })

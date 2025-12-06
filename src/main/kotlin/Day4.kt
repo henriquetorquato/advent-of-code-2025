@@ -4,11 +4,25 @@ class Day4 {
         const val TOP_BOUND = 0
     }
 
-    fun solve(diagram: String): Int {
-        val grid = parseOrThrow(diagram)
-        var accessibleRolls = 0
+    fun solve(diagram: String): Pair<Int, Int> {
+        var grid = parseOrThrow(diagram)
+        val (nextGrid, totalPart1) = removeRolls(grid)
 
-        val debug = Array(grid.size) { Array(grid.first().size) { '.' } }
+        var totalPart2 = totalPart1
+        grid = nextGrid
+
+        do {
+            val (nextGrid, total) = removeRolls(grid)
+            totalPart2 += total
+            grid = nextGrid
+        } while (total > 0)
+
+        return Pair(totalPart1, totalPart2)
+    }
+
+    fun removeRolls(grid: Array<Array<Boolean>>): Pair<Array<Array<Boolean>>, Int> {
+        var accessibleRolls = 0
+        val result = Array(grid.size) { grid[it].copyOf() }
 
         for (y in 0..<grid.size) {
             val bottomBound = grid.size - 1
@@ -65,28 +79,24 @@ class Day4 {
 
                 if (adjacent < 4) {
                     accessibleRolls += 1
-                    debug[y][x] = 'x'
-                } else {
-                    debug[y][x] = when (grid[y][x]) {
-                        true -> '@'
-                        false -> '.'
-                    }
+                    result[y][x] = false
                 }
             }
         }
 
-        return accessibleRolls
+        return Pair(result, accessibleRolls)
     }
 
-    fun parseOrThrow(diagram: String): List<List<Boolean>> {
+    fun parseOrThrow(diagram: String): Array<Array<Boolean>> {
         return diagram
             .split('\n')
             .map { row -> row.toCharArray().map { char ->
-                when (char) {
-                    '.' -> false
-                    '@' -> true
-                    else -> throw RuntimeException("Invalid diagram character $char")
-                }
-            }}
+                    when (char) {
+                        '.' -> false
+                        '@' -> true
+                        else -> throw RuntimeException("Invalid diagram character $char")
+                    }
+                }.toTypedArray()
+            }.toTypedArray()
     }
 }
