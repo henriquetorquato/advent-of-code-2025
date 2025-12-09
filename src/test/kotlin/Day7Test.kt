@@ -45,7 +45,8 @@ class Day7Test : ShouldSpec({
 
             val result = Day7().solve(input)
 
-            result shouldBe 21
+            result.first shouldBe 21
+            result.second shouldBe 40
         }
         should("return final value") {
             val input = """
@@ -199,7 +200,7 @@ class Day7Test : ShouldSpec({
             val result = Day7().solve(input)
             println(result)
 
-            result shouldBe 1646
+            result.first shouldBe 1646
         }
     }
 })
