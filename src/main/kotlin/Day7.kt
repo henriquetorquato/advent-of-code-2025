@@ -26,74 +26,50 @@ class Day7 {
 
     fun totalPart2(diagram: String): Int {
         var total = 0
-        val queue = ArrayDeque<Pair<String, Int>>()
-        queue.add(Pair(diagram, 0))
+
+        val levels = diagram
+            .lines()
+            .toTypedArray()
+            .map { it.toCharArray() }
+
+        val start = levels
+            .first()
+            .indexOf('S')
+
+        val queue = ArrayDeque<Pair<Int, Int>>()
+        queue.add(Pair(start, 1))
 
         while (queue.isNotEmpty()) {
-            val (diagram, idx) = queue.removeFirst()
-            val (currentTimeline, nextTimelines) = continueAt(diagram, idx)
+            val (incomingBeam, currentLevel) = queue.removeFirst()
 
-            if (nextTimelines.isNotEmpty()) {
-                queue.addAll(nextTimelines.map { it to idx + 1 })
-            } else if (currentTimeline != "") {
-                queue.add(currentTimeline to idx + 1)
-            } else {
+            if (currentLevel == levels.size) {
                 total += 1
+                continue
+            }
+
+            val splitters = levels[currentLevel]
+                .mapIndexed { idx, char -> if (char == '^') idx else null }
+                .filterNotNull()
+
+            var outgoingBeams = setOf<Int>()
+
+            for (splitter in splitters) {
+                if (incomingBeam == splitter) {
+                    outgoingBeams = outgoingBeams + (splitter - 1)
+                    outgoingBeams = outgoingBeams + (splitter + 1)
+                }
+            }
+
+            if (incomingBeam !in splitters) {
+                outgoingBeams = outgoingBeams + incomingBeam
+            }
+
+            if (outgoingBeams.isNotEmpty()) {
+                queue.addAll(outgoingBeams.map { it to currentLevel + 1 })
             }
         }
 
         return total
-    }
-
-    fun continueAt(diagram: String, lineIdx: Int): Pair<String, List<String>> {
-        val levels = diagram
-            .lines()
-            .toTypedArray()
-
-        if (lineIdx == 0) {
-            return diagram to listOf()
-        } else if (lineIdx >= levels.size) {
-            return "" to listOf()
-        }
-
-        val previous = levels[lineIdx - 1].toCharArray()
-        val current = levels[lineIdx].toCharArray()
-
-        if (previous.contains('S')) { // if is first line
-            return Pair(
-                diagramWithBeamAt(diagram, lineIdx, previous.indexOf('S')),
-                listOf(),
-            )
-        }
-
-        var dimensions = listOf<String>()
-
-        for ((charIdx, char) in current.withIndex()) {
-            if (previous[charIdx] != '|') {
-                continue
-            }
-
-            if (char == '^') {
-                dimensions = dimensions + diagramWithBeamAt(diagram, lineIdx, charIdx - 1)
-                dimensions = dimensions + diagramWithBeamAt(diagram, lineIdx, charIdx + 1)
-            } else {
-                dimensions = dimensions + diagramWithBeamAt(diagram, lineIdx, charIdx)
-            }
-        }
-
-        return diagram to dimensions
-    }
-
-    fun diagramWithBeamAt(diagram: String, lineIdx: Int, colIdx: Int): String {
-        val lines = diagram
-            .lines()
-            .toTypedArray()
-
-        val cols = lines[lineIdx].toCharArray()
-        cols[colIdx] = '|'
-
-        lines[lineIdx] = cols.concatToString()
-        return lines.joinToString("\n")
     }
 
     fun solveDiagram(diagram: String): String {
