@@ -26,7 +26,6 @@ class Day7 {
 
     fun totalPart2(diagram: String): Int {
         var total = 0
-
         val queue = ArrayDeque<Pair<String, Int>>()
         queue.add(Pair(diagram, 0))
 
@@ -36,9 +35,10 @@ class Day7 {
 
             if (nextTimelines.isNotEmpty()) {
                 queue.addAll(nextTimelines.map { it to idx + 1 })
-                total += nextTimelines.size
             } else if (currentTimeline != "") {
                 queue.add(currentTimeline to idx + 1)
+            } else {
+                total += 1
             }
         }
 
@@ -95,16 +95,6 @@ class Day7 {
         lines[lineIdx] = cols.concatToString()
         return lines.joinToString("\n")
     }
-
-    private data class Node(
-        val from: Node?,
-        val position: Position
-    )
-
-    private data class Position(
-        val x: Int,
-        val y: Int
-    )
 
     fun solveDiagram(diagram: String): String {
         val levels = diagram
