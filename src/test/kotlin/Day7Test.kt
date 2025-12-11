@@ -46,7 +46,7 @@ class Day7Test : ShouldSpec({
             val result = Day7().solve(input)
 
             result.first shouldBe 21
-            result.second shouldBe 40
+            result.second shouldBe 40.toBigInteger()
         }
         should("return final value") {
             val input = """

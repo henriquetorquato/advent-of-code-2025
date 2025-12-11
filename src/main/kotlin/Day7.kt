@@ -1,7 +1,19 @@
+import kotlin.time.measureTime
+import java.math.BigInteger
+
 class Day7 {
 
-    fun solve(diagram: String): Pair<Int, Int>
-        = Pair(totalPart1(diagram), totalPart2(diagram))
+    fun solve(diagram: String): Pair<Int, BigInteger> {
+        val totalPart1 = totalPart1(diagram)
+
+        var totalPart2: BigInteger
+        val timePart2 = measureTime {
+            totalPart2 = totalPart2(diagram)
+        }
+
+        println("Part 2 finished with: $timePart2")
+        return Pair(totalPart1, totalPart2)
+    }
 
     fun totalPart1(diagram: String): Int {
         val solved = solveDiagram(diagram)
@@ -24,9 +36,7 @@ class Day7 {
         return total
     }
 
-    fun totalPart2(diagram: String): Int {
-        var total = 0
-
+    fun totalPart2(diagram: String): BigInteger {
         val levels = diagram
             .lines()
             .toTypedArray()
@@ -36,40 +46,70 @@ class Day7 {
             .first()
             .indexOf('S')
 
-        val queue = ArrayDeque<Pair<Int, Int>>()
-        queue.add(Pair(start, 1))
+        val root = Node(
+            path = listOf(start),
+            depth = 1,
+        )
 
-        while (queue.isNotEmpty()) {
-            val (incomingBeam, currentLevel) = queue.removeFirst()
+        var iterations = BigInteger.ZERO
+        var total = BigInteger.ZERO
 
-            if (currentLevel == levels.size) {
-                total += 1
-                continue
+        fun next(node: Node) {
+            if (iterations.remainder(BigInteger.valueOf(5000000)) == BigInteger.ZERO) {
+                val previous = node.previous()
+                println("[$iterations] Total: $total. Node: Depth: ${node.depth}, Incoming beam: $previous.")
+            }
+            iterations = iterations.add(BigInteger.ONE)
+
+            if (node.depth == levels.size) {
+                total = total.add(BigInteger.ONE)
+                return
             }
 
-            val splitters = levels[currentLevel]
+            val incomingBeam = node.previous()
+            val splitters = levels[node.depth]
                 .mapIndexed { idx, char -> if (char == '^') idx else null }
                 .filterNotNull()
 
-            var outgoingBeams = setOf<Int>()
-
+            val path = node.path.toList()
             for (splitter in splitters) {
                 if (incomingBeam == splitter) {
-                    outgoingBeams = outgoingBeams + (splitter - 1)
-                    outgoingBeams = outgoingBeams + (splitter + 1)
+                    val leftNode = Node(
+                        path = path + (splitter - 1),
+                        depth = node.nextDepth(),
+                    )
+
+                    next(leftNode)
+
+                    val rightNode = Node(
+                        path = path + (splitter + 1),
+                        depth = node.nextDepth(),
+                    )
+
+                    next(rightNode)
                 }
             }
 
             if (incomingBeam !in splitters) {
-                outgoingBeams = outgoingBeams + incomingBeam
-            }
+                val nextNode = Node(
+                    path = path + incomingBeam,
+                    depth = node.nextDepth(),
+                )
 
-            if (outgoingBeams.isNotEmpty()) {
-                queue.addAll(outgoingBeams.map { it to currentLevel + 1 })
+                next(nextNode)
             }
         }
+        next(root)
 
         return total
+    }
+
+    private data class Node(
+        val path: List<Int>,
+        val depth: Int,
+    ) {
+        fun previous(): Int = path[depth - 1]
+        fun nextDepth(): Int = depth + 1
     }
 
     fun solveDiagram(diagram: String): String {
