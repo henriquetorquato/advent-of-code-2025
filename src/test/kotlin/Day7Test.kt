@@ -201,6 +201,7 @@ class Day7Test : ShouldSpec({
             println(result)
 
             result.first shouldBe 1646
+            result.second shouldBe 32451134474991
         }
     }
 })
