@@ -1,21 +1,9 @@
-import kotlin.time.measureTime
-import java.math.BigInteger
-
 class Day7 {
 
-    fun solve(diagram: String): Pair<Int, BigInteger> {
-        val totalPart1 = totalPart1(diagram)
+    fun solve(diagram: String): Pair<Int, Long>
+        = Pair(solvePart1(diagram), solvePart2(diagram))
 
-        var totalPart2: BigInteger
-        val timePart2 = measureTime {
-            totalPart2 = totalPart2(diagram)
-        }
-
-        println("Part 2 finished with: $timePart2")
-        return Pair(totalPart1, totalPart2)
-    }
-
-    fun totalPart1(diagram: String): Int {
+    fun solvePart1(diagram: String): Int {
         val solved = solveDiagram(diagram)
             .lines()
             .toTypedArray()
@@ -36,80 +24,62 @@ class Day7 {
         return total
     }
 
-    fun totalPart2(diagram: String): BigInteger {
+    fun solvePart2(diagram: String): Long {
         val levels = diagram
             .lines()
             .toTypedArray()
             .map { it.toCharArray() }
 
+        val splitterMap = levels
+            .mapIndexed { levelIdx, level ->
+                if (!level.contains('^')) {
+                    return@mapIndexed null
+                }
+
+                val splitters = level
+                    .mapIndexed { idx, char -> if (char == '^') idx else null }
+                    .filterNotNull()
+
+                return@mapIndexed levelIdx to splitters
+            }
+            .filterNotNull()
+            .toMap()
+
         val start = levels
             .first()
             .indexOf('S')
 
-        val root = Node(
-            path = listOf(start),
-            depth = 1,
-        )
+        val cache: MutableMap<Pair<Int, Int>, Long> = HashMap()
 
-        var iterations = BigInteger.ZERO
-        var total = BigInteger.ZERO
-
-        fun next(node: Node) {
-            if (iterations.remainder(BigInteger.valueOf(5000000)) == BigInteger.ZERO) {
-                val previous = node.previous()
-                println("[$iterations] Total: $total. Node: Depth: ${node.depth}, Incoming beam: $previous.")
-            }
-            iterations = iterations.add(BigInteger.ONE)
-
-            if (node.depth == levels.size) {
-                total = total.add(BigInteger.ONE)
-                return
+        fun next(incomingBeam: Int, level: Int): Long {
+            if (level == levels.size) {
+                return 1
             }
 
-            val incomingBeam = node.previous()
-            val splitters = levels[node.depth]
-                .mapIndexed { idx, char -> if (char == '^') idx else null }
-                .filterNotNull()
+            val cacheKey = incomingBeam to level
+            val cacheValue = cache[cacheKey]
+            if (cacheValue != null) {
+                return cacheValue
+            }
 
-            val path = node.path.toList()
+            var total: Long = 0
+            val splitters = splitterMap[level] ?: listOf()
+
             for (splitter in splitters) {
                 if (incomingBeam == splitter) {
-                    val leftNode = Node(
-                        path = path + (splitter - 1),
-                        depth = node.nextDepth(),
-                    )
-
-                    next(leftNode)
-
-                    val rightNode = Node(
-                        path = path + (splitter + 1),
-                        depth = node.nextDepth(),
-                    )
-
-                    next(rightNode)
+                    total += next(splitter - 1, level + 1)
+                    total += next(splitter + 1, level + 1)
                 }
             }
 
             if (incomingBeam !in splitters) {
-                val nextNode = Node(
-                    path = path + incomingBeam,
-                    depth = node.nextDepth(),
-                )
-
-                next(nextNode)
+                total += next(incomingBeam, level + 1)
             }
+
+            cache[cacheKey] = total
+            return total
         }
-        next(root)
-
-        return total
-    }
-
-    private data class Node(
-        val path: List<Int>,
-        val depth: Int,
-    ) {
-        fun previous(): Int = path[depth - 1]
-        fun nextDepth(): Int = depth + 1
+        return next(start, 1)
     }
 
     fun solveDiagram(diagram: String): String {
