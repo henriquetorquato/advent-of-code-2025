@@ -4,107 +4,87 @@ import kotlin.math.sqrt
 class Day8 {
 
     fun solve(diagram: String, connections: Int): Int {
-        val junctionBoxes = diagram
+        val junctionBoxes = parseOrThrow(diagram)
+        var distances = listOf<Triple<Int, Int, Float>>() // box A, box B, distance
+
+        for ((idA, boxA) in junctionBoxes.withIndex()) {
+            for (idB in (idA + 1)..<junctionBoxes.size) {
+                val boxB = junctionBoxes[idB]
+                val distance = boxA.distance(boxB)
+                distances = distances + Triple(idA, idB, distance)
+            }
+        }
+
+        distances = distances
+            .sortedBy { it.third }
+            .take(connections)
+
+        // circuit id -> list(box id)
+        var nextCircuitId = 0
+        val circuits = HashMap<Int, List<Int>>()
+
+        fun findCircuit(junctionBoxId: Int): Int? {
+            for ((id, junctionBoxes) in circuits) {
+                if (junctionBoxId !in junctionBoxes) {
+                    continue
+                }
+
+                return id
+            }
+
+            return null
+        }
+
+        fun mergeCircuits(a: Int, b: Int) {
+            val valuesA = circuits[a]!!
+            val valuesB = circuits[b]!!
+
+            circuits.remove(b)
+            circuits[a] = valuesA + valuesB
+        }
+
+        fun addToCircuit(circuitId: Int, boxId: Int) {
+            val values = circuits.getOrDefault(circuitId, listOf())
+            circuits[circuitId] = values  + boxId
+        }
+
+        for ((boxA, boxB, _) in distances) {
+            val circuitA = findCircuit(boxA)
+            val circuitB = findCircuit(boxB)
+
+            if (circuitA != null && circuitB != null) {
+                if (circuitA == circuitB) {
+                    continue
+                }
+
+                mergeCircuits(circuitA, circuitB)
+            } else {
+                if (circuitA != null) {
+                    addToCircuit(circuitA, boxB)
+                } else if (circuitB != null) {
+                    addToCircuit(circuitB, boxA)
+                } else {
+                    val circuitId = nextCircuitId++
+                    addToCircuit(circuitId, boxA)
+                    addToCircuit(circuitId, boxB)
+                }
+            }
+        }
+
+        val totalPart1 = circuits
+            .map { it.value.count() }
+            .sortedDescending()
+            .take(3)
+            .reduce { a, b -> a * b }
+
+        return totalPart1
+    }
+
+    private fun parseOrThrow(diagram: String): Array<JunctionBox> {
+        return diagram
             .lines()
             .map { JunctionBox.parseOrThrow(it) }
             .toTypedArray()
-
-        // junction box id -> circuit id
-        val circuits = junctionBoxes
-            .mapIndexed { i, _ -> i to i } // each box starts on its own circuit
-            .toMap()
-            .toMutableMap()
-
-        var totalCircuits = circuits.size
-
-        fun addBoxToCircuit(junctionBoxId: Int, circuitId: Int) {
-            circuits[junctionBoxId] = circuitId
-            totalCircuits -= 1
-        }
-
-        for (i in 0..<connections) {
-            for ((boxId, junctionBox) in junctionBoxes.withIndex()) {
-                var closestCircuitId: Int? = null
-                var closestCircuitDistance = 0f
-
-                for (circuitId in 0..<totalCircuits) {
-                    val circuitValuesKeys = circuits
-                        .filter { it.value == circuitId }
-                        .keys
-
-                    if (boxId in circuitValuesKeys) {
-                        continue
-                    }
-
-                    val circuit = circuitValuesKeys
-                        .map { junctionBoxes[it] }
-
-                    val distance = junctionBox.circuitDistance(circuit).min()
-                    if (closestCircuitId == null || distance < closestCircuitDistance) {
-                        closestCircuitId = circuitId
-                        closestCircuitDistance = distance
-                    }
-                }
-
-                if (closestCircuitId != null) {
-                    addBoxToCircuit(boxId, closestCircuitId)
-                }
-            }
-
-            val a = 0
-        }
-
-        return 0
-    }
-
-    // Keeping this since I feel like it might solve a possible part 2
-    fun maybeSolvePart2(diagram: String, connections: Int): Int {
-        val junctionBoxes = diagram
-            .lines()
-            .map { JunctionBox.parseOrThrow(it) }
-
-        val circuits = junctionBoxes
-            .mapIndexed { idx, junctionBox -> idx to listOf(junctionBox) }
-            .toMap()
-            .toMutableMap()
-
-        fun mergeCircuits(a: Int, b: Int) {
-            if (!circuits.containsKey(a) || !circuits.containsKey(b)) {
-                return
-            }
-
-            circuits[a] = circuits[a]!! + circuits[b]!!
-            circuits.remove(b)
-        }
-
-        for (i in 0..<connections) {
-            var closestCircuitA: Int? = null
-            var closestCircuitB: Int? = null
-            var closestCircuitDistance = 0f
-
-            for ((idxA, circuitA) in circuits) {
-                for ((idxB, circuitB) in circuits) {
-                    if (idxA == idxB) {
-                        continue
-                    }
-
-                    for (box in circuitA) {
-                        val distance = box.circuitDistance(circuitB).min()
-                        if (closestCircuitA == null || distance < closestCircuitDistance) {
-                            closestCircuitA = idxA
-                            closestCircuitB = idxB
-                            closestCircuitDistance = distance
-                        }
-                    }
-                }
-            }
-
-            if (closestCircuitA != null && closestCircuitB != null) {
-                mergeCircuits(closestCircuitA, closestCircuitB)
-            }
-        }
-
-        return 0
     }
 
     private data class JunctionBox(
@@ -135,8 +115,5 @@ class Day8 {
 
             return sqrt(sum)
         }
-
-        fun circuitDistance(circuit: List<JunctionBox>): List<Float>
-            = circuit.map { distance(it) }
     }
 }
