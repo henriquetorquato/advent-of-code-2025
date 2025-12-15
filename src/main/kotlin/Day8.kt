@@ -3,7 +3,7 @@ import kotlin.math.sqrt
 
 class Day8 {
 
-    fun solve(diagram: String, connections: Int): Int {
+    fun solve(diagram: String, connections: Int): Pair<Int, Float> {
         val junctionBoxes = parseOrThrow(diagram)
         var distances = listOf<Triple<Int, Int, Float>>() // box A, box B, distance
 
@@ -17,7 +17,6 @@ class Day8 {
 
         distances = distances
             .sortedBy { it.third }
-            .take(connections)
 
         // circuit id -> list(box id)
         var nextCircuitId = 0
@@ -48,7 +47,26 @@ class Day8 {
             circuits[circuitId] = values  + boxId
         }
 
-        for ((boxA, boxB, _) in distances) {
+        fun calculateTotalPart2(a: Int, b: Int): Float {
+            val junctionBoxA = junctionBoxes[a]
+            val junctionBoxB = junctionBoxes[b]
+            return junctionBoxA.x * junctionBoxB.x
+        }
+
+        var totalPart1 = 0
+        var totalPart2: Float? = null
+
+        for ((i, triple) in distances.withIndex()) {
+            val (boxA, boxB, _) = triple
+
+            if (i == connections) {
+                totalPart1 = circuits
+                    .map { it.value.count() }
+                    .sortedDescending()
+                    .take(3)
+                    .reduce { a, b -> a * b }
+            }
+
             val circuitA = findCircuit(boxA)
             val circuitB = findCircuit(boxB)
 
@@ -57,13 +75,17 @@ class Day8 {
                     continue
                 }
 
+                totalPart2 = calculateTotalPart2(boxA, boxB)
                 mergeCircuits(circuitA, circuitB)
             } else {
                 if (circuitA != null) {
+                    totalPart2 = calculateTotalPart2(boxA, boxB)
                     addToCircuit(circuitA, boxB)
                 } else if (circuitB != null) {
+                    totalPart2 = calculateTotalPart2(boxA, boxB)
                     addToCircuit(circuitB, boxA)
                 } else {
+                    totalPart2 = calculateTotalPart2(boxA, boxB)
                     val circuitId = nextCircuitId++
                     addToCircuit(circuitId, boxA)
                     addToCircuit(circuitId, boxB)
@@ -71,13 +93,7 @@ class Day8 {
             }
         }
 
-        val totalPart1 = circuits
-            .map { it.value.count() }
-            .sortedDescending()
-            .take(3)
-            .reduce { a, b -> a * b }
-
-        return totalPart1
+        return Pair(totalPart1, totalPart2 ?: 0f)
     }
 
     private fun parseOrThrow(diagram: String): Array<JunctionBox> {

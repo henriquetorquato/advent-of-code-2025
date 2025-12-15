@@ -29,7 +29,8 @@ class Day8Test : ShouldSpec({
 
             val result = Day8().solve(input, 10)
 
-            result shouldBe 40
+            result.first shouldBe 40
+            result.second shouldBe 25272f
         }
         should("return final value") {
             val input = """
@@ -1038,7 +1039,8 @@ class Day8Test : ShouldSpec({
             val result = Day8().solve(input, 1000)
             println(result)
 
-            result shouldBe 79056
+            result.first shouldBe 79056
+            result.second shouldBe 4639477f
         }
     }
 })
