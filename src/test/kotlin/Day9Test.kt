@@ -1,7 +1,31 @@
 import io.kotest.core.spec.style.ShouldSpec
+import io.kotest.matchers.should
 import io.kotest.matchers.shouldBe
 
 class Day9Test : ShouldSpec({
+    context("Segment") {
+        val pointA = Day9.Point(11, 3)
+        val pointB = Day9.Point(11, 8)
+        val pointC = Day9.Point(15, 3)
+
+        val horizontalSegment = Day9.Segment(Day9.Point(11, 1), Day9.Point(11, 7))
+        val verticalSegment = Day9.Segment(Day9.Point(8, 3), Day9.Point(12, 3))
+
+        should("correctly check if contains point") {
+            horizontalSegment.isVertical shouldBe true
+            horizontalSegment.contains(pointA) shouldBe true
+            horizontalSegment.contains(pointB) shouldBe false
+            horizontalSegment.contains(pointC) shouldBe false
+
+            verticalSegment.isVertical shouldBe false
+            verticalSegment.contains(pointA) shouldBe true
+            verticalSegment.contains(pointB) shouldBe false
+            verticalSegment.contains(pointC) shouldBe false
+
+            val segment = Day9.Segment(Day9.Point(9, 7), Day9.Point(9, 5))
+            segment.contains(Day9.Point(9, 5)) shouldBe true
+        }
+    }
     context("with given input") {
         should("return test value") {
             val input = """
@@ -17,7 +41,8 @@ class Day9Test : ShouldSpec({
 
             val result = Day9().solve(input)
 
-            result shouldBe 50.toBigInteger()
+            result.first shouldBe 50.toBigInteger()
+            result.second shouldBe 24.toBigInteger()
         }
         should("return final value") {
             val input = """
@@ -523,7 +548,8 @@ class Day9Test : ShouldSpec({
 
             println(result)
 
-            result shouldBe 4745816424.toBigInteger()
+            result.first shouldBe 4745816424.toBigInteger()
+            result.second shouldBe 1351617690.toBigInteger()
         }
     }
 })
