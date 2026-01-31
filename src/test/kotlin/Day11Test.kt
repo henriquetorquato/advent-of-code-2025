@@ -4,7 +4,7 @@ import io.kotest.matchers.shouldBe
 class Day11Test : ShouldSpec({
     context("with given input") {
         should("return test value") {
-            val input = """
+            val inputPart1 = """
             aaa: you hhh
             you: bbb ccc
             bbb: ddd eee
@@ -17,9 +17,27 @@ class Day11Test : ShouldSpec({
             iii: out
             """.trimIndent().trimStart('\n')
 
-            val result = Day11().solve(input)
+            val part1 = Day11().solvePart1(inputPart1)
+            part1 shouldBe 5
 
-            result shouldBe 5
+            val inputPart2 = """
+            svr: aaa bbb
+            aaa: fft
+            fft: ccc
+            bbb: tty
+            tty: ccc
+            ccc: ddd eee
+            ddd: hub
+            hub: fff
+            eee: dac
+            dac: fff
+            fff: ggg hhh
+            ggg: out
+            hhh: out
+            """.trimIndent().trimStart('\n')
+
+            val part2 = Day11().solvePart2(inputPart2)
+            part2 shouldBe 2.toBigInteger()
         }
         should("return final value") {
             val input = """
@@ -601,11 +619,11 @@ class Day11Test : ShouldSpec({
             hvh: mpf xqw
             """.trimIndent().trimStart('\n')
 
-            val result = Day11().solve(input)
+            val part1 = Day11().solvePart1(input)
+            part1 shouldBe 607
 
-            println(result)
-
-            result shouldBe 607
+            val part2 = Day11().solvePart2(input)
+            part2 shouldBe 506264456238938.toBigInteger()
         }
     }
 })
